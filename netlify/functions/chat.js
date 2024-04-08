@@ -13,7 +13,7 @@ exports.handler = async function(event) {
 
     
 
-    const apiKey = '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';
+    const apiKey = '';
     try {
         const response = await fetch('https://api.openai.com/v1/completions', {
             method: 'POST',

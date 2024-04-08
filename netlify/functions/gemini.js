@@ -4,7 +4,7 @@ const { google } = require('googleapis');
 exports.handler = async () => {
 
   const prompt = "hello. suggest me some hindi movies"
-  const apiKey = "AIzaSyDMDjSzsuRKGk3q0XrtiSpr03ZlJGou1Yo";
+  const apiKey = "";
 
   const gemini = google.discovery(
     {
