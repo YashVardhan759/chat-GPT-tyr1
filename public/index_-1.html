@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+
+
+
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jamstack Explorers - Up and Running with Serverless Functions</title>
+  </head>
+
+
+  <body>
+    <!-- <h1>Up and Running with Serverless Functions</h1>
+    <button id="fetch-btn">Fetch</button>
+    <p id="response-output">Response Placeholder</p> -->
+
+    <div class="container">
+      <h1>ChatGPT Web App</h1>
+      <div>
+          <textarea id="user-input" rows="4" placeholder="Type your message here..."></textarea>
+          <button onclick="get_gemini_response()">Send</button>
+      </div>
+      <div id="chat-box"></div>
+    </div>
+
+
+
+
+
+
+    <script>
+
+      // document.addEventListener('DOMContentLoaded', () => {
+      //   const fetchBtn = document.getElementById('fetch-btn')
+      //   const responseText = document.getElementById('response-output')
+
+      //   fetchBtn.addEventListener('click', async () => {
+
+      //     const response = await fetch('/.netlify/functions/api1').then( response => response.json())
+
+      //   responseText.innerText = 'Static Text Replacement'
+      //   })
+      // })
+
+
+    async function sendMessage()
+    {
+        // const userInput = 
+        // if (!userInput) return;
+        // appendMessage('You: ' + userInput);
+
+        // try {
+
+        //     const response = await fetch('/.netlify/functions/chat');
+        //     const data = await response.json();
+        //     const botResponse = data.message;
+        //     appendMessage('ChatGPT: ' + botResponse);
+
+        // }
+        // catch (error) {
+        //     console.error('Error here:', error);
+        //     // console.log("error here");
+        //   }
+
+
+
+
+        // const text = "Your prompt here";
+        // fetch('/.netlify/functions/gemini2', {
+        //   method: 'POST',
+        //   body: JSON.stringify({ text }),
+        // })
+        // .then(response => response.json())
+        // .then(data => {
+        //   console.log(data); 
+        // })
+        // .catch(error => {
+        //   console.error('Error:', error);
+        // });
+
+        const userInput = document.getElementById('user-input').value.trim();
+        const GOOGLE_API_KEY = 'AIzaSyDMDjSzsuRKGk3q0XrtiSpr03ZlJGou1Yo'; // Replace with your actual API key
+
+        const postData = {
+            contents: [
+                {
+                    parts: [
+                        { text: userInput }
+                    ]
+                }
+            ]
+        };
+
+        fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=' + GOOGLE_API_KEY, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(postData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+          const text = data.candidates[0].content.parts[0].text
+          appendMessage(text)
+        })
+        .catch(error => {
+            console.error('There was a problem with your fetch operation:', error);
+        });
+
+
+
+
+
+    }
+
+    async function get_gemini_response()
+    {
+      const response = await fetch( "/.netlify/functions/gemini2"
+      ,{
+        method:'POST',
+        body:JSON.stringify({
+          question:document.getElementById('user-input').value.trim()
+        })
+      } 
+    ).then(response => response.json())
+
+    // console.log("got gemini req res")  
+    console.log(typeof response)
+    appendMessage(response)
+
+    }
+
+function appendMessage(message) {
+    const chatBox = document.getElementById('chat-box');
+    const messageElement = document.createElement('div');
+    messageElement.textContent = message;
+    chatBox.appendChild(messageElement);
+    chatBox.scrollTop = chatBox.scrollHeight; // scroll to bottom
+}
+
+
+    </script>
+  </body>
+
+
+</html>

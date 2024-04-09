@@ -1,0 +1,8 @@
+{
+    "name": "this_is_package_name",
+    "version": "1.0.0",
+    "dependencies": {
+      "marked": "0.31",
+      "@google/generative-ai":"0.5.0"
+    }
+  }

@@ -1,7 +1,181 @@
+
 <!DOCTYPE html>
 <html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/npm/showdown@<version>/dist/showdown.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
 
+<title>ChatGPT Web Page</title>
+<style>
+
+    body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        color: white;
+    }
+    .content {
+        background-color: #333;
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 90px);
+        font-size: 20px;
+    }
+    .header {
+        background-color: #333;
+        color: #fff;
+        padding: 10px;
+        text-align: center;
+        font-size: 24px;
+        flex-grow: 1;
+    }
+    .chat-area {
+        flex-grow: 1;
+        height: 100%;
+        overflow-y: auto;
+        padding: 10px 15%;
+        padding-top: 50px;
+        flex-grow: 1;
+        /* border: 1px solid red; */
+    }
+    .input-area {
+        flex-grow: 1;
+        margin: 15px 20%;
+        margin-bottom: 20px;
+        padding: 10px 20px;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: row;
+    }
+    .input-area input[type="text"] {
+        padding: 12px;
+        border: none;
+        border-radius: 5px;
+        outline: none;
+        font-size: medium;
+        flex-grow: 1;
+    }
+    .input-area input[type="button"] {
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        padding: 8px 25px;
+        cursor: pointer;
+        margin-left: 10px;
+    }
+    .footer {
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        position: fixed;
+        bottom: 0;
+        padding-bottom: 15px;
+        width: 100%;
+    }
+
+</style>
+</head>
+<body>
+
+    <div class="content">
+        <div class="header"></div>
+        <div class="chat-area" id="chatArea"></div>
+    </div>
+
+
+
+<footer class="footer">
+    <div class="input-area">
+        <input type="text" id="userInput" placeholder="Type your message...">
+        <input type="button" value="Send" onclick="get_gemini_response()">
+    </div> 
+</footer>
+
+
+
+<script>
+
+    function displayMessage(sender, message) {
+        var chatArea = document.getElementById('chatArea');
+        var messageDiv = document.createElement('div');
+        messageDiv.classList.add('message');
+        if (sender === 'user') {
+            messageDiv.classList.add('user-message');
+        } else if (sender === 'bot') {
+            messageDiv.classList.add('bot-message');
+        }
+        messageDiv.innerHTML = message;
+        chatArea.appendChild(messageDiv);
+        chatArea.scrollTop = chatArea.scrollHeight;
+    }
+
+    async function get_gemini_response()
+    {
+        var userInput = document.getElementById('userInput').value;
+        displayMessage('user', userInput);
+        const response = await fetch( "/.netlify/functions/gemini2"
+        ,{
+            method:'POST',
+            body:JSON.stringify({
+            question:userInput.trim()
+            })
+        }
+        ).then(response => response.json())
+
+        console.log("got the response")
+        console.log(response)
+        setOutput(response)
+    }
+
+    function setOutput(response){
+
+        displayMessage("bot",marked.parse(response));
+        displayMessage("bot",marked.parse("<p>\n\n</p>"));
+        document.getElementById('userInput').value = '';
+
+    }
+
+
+</script>
+
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- <!DOCTYPE html>
+<html lang="en">
 
   <head>
     <meta charset="UTF-8" />
@@ -10,11 +184,7 @@
     <title>Jamstack Explorers - Up and Running with Serverless Functions</title>
   </head>
 
-
   <body>
-    <!-- <h1>Up and Running with Serverless Functions</h1>
-    <button id="fetch-btn">Fetch</button>
-    <p id="response-output">Response Placeholder</p> -->
 
     <div class="container">
       <h1>ChatGPT Web App</h1>
@@ -32,54 +202,9 @@
 
     <script>
 
-      // document.addEventListener('DOMContentLoaded', () => {
-      //   const fetchBtn = document.getElementById('fetch-btn')
-      //   const responseText = document.getElementById('response-output')
-
-      //   fetchBtn.addEventListener('click', async () => {
-
-      //     const response = await fetch('/.netlify/functions/api1').then( response => response.json())
-
-      //   responseText.innerText = 'Static Text Replacement'
-      //   })
-      // })
-
 
     async function sendMessage()
     {
-        // const userInput = 
-        // if (!userInput) return;
-        // appendMessage('You: ' + userInput);
-
-        // try {
-
-        //     const response = await fetch('/.netlify/functions/chat');
-        //     const data = await response.json();
-        //     const botResponse = data.message;
-        //     appendMessage('ChatGPT: ' + botResponse);
-
-        // }
-        // catch (error) {
-        //     console.error('Error here:', error);
-        //     // console.log("error here");
-        //   }
-
-
-
-
-        // const text = "Your prompt here";
-        // fetch('/.netlify/functions/gemini2', {
-        //   method: 'POST',
-        //   body: JSON.stringify({ text }),
-        // })
-        // .then(response => response.json())
-        // .then(data => {
-        //   console.log(data); 
-        // })
-        // .catch(error => {
-        //   console.error('Error:', error);
-        // });
-
         const userInput = document.getElementById('user-input').value.trim();
         const GOOGLE_API_KEY = 'AIzaSyDMDjSzsuRKGk3q0XrtiSpr03ZlJGou1Yo'; // Replace with your actual API key
 
@@ -131,7 +256,6 @@
       } 
     ).then(response => response.json())
 
-    // console.log("got gemini req res")  
     console.log(typeof response)
     appendMessage(response)
 
@@ -150,4 +274,7 @@ function appendMessage(message) {
   </body>
 
 
-</html>
+</html> -->
+
+
+
