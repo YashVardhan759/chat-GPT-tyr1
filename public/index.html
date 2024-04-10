@@ -119,7 +119,7 @@
     {
         var userInput = document.getElementById('userInput').value;
         displayMessage('user', userInput);
-        const response = await fetch( "/.netlify/functions/gemini2"
+        const response = await fetch( "/.netlify/functions/gemini_chat"
         ,{
             method:'POST',
             body:JSON.stringify({
