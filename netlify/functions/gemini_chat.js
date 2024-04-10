@@ -7,7 +7,8 @@ exports.handler = async function(event ,context) {
 
     const eventBody = JSON.parse(event.body)
     console.log(eventBody.question)
-    const genAI = new GoogleGenerativeAI(process.env.API_KEY);
+    const GOOGLE_API_KEY = 'AIzaSyDMDjSzsuRKGk3q0XrtiSpr03ZlJGou1Yo'; 
+    const genAI = new GoogleGenerativeAI(GOOGLE_API_KEY);
     const model = genAI.getGenerativeModel({ model: "gemini-pro"});
 
     try{
@@ -37,6 +38,7 @@ exports.handler = async function(event ,context) {
         const response = await result.response;
         const text = response.text();
         console.log("got chat response")
+        console.log(response)
         console.log(text);
         
         return{
