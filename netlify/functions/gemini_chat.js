@@ -16,17 +16,6 @@ exports.handler = async function(event ,context) {
         const model = genAI.getGenerativeModel({ model: "gemini-pro"});
         const chat = model.startChat(
             {
-                history: 
-                    [
-                      {
-                        role: "user",
-                        parts: [{ text: "Hello, I have 2 dogs in my house." }],
-                      },
-                      {
-                        role: "model",
-                        parts: [{ text: "Great to meet you. What would you like to know?" }],
-                      },
-                    ],
                 generationConfig: 
                 {
                   maxOutputTokens: 100,
