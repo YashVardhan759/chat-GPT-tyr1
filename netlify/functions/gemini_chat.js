@@ -7,25 +7,41 @@ exports.handler = async function(event ,context) {
 
     const eventBody = JSON.parse(event.body)
     console.log(eventBody.question)
+    const genAI = new GoogleGenerativeAI(process.env.API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-pro"});
 
     try{
-
-
-        console.log("Got the request fine")
-        const GOOGLE_API_KEY = 'AIzaSyDMDjSzsuRKGk3q0XrtiSpr03ZlJGou1Yo';
-        const genAi =  new GoogleGenerativeAI(GOOGLE_API_KEY)
-        // genAi.start
-        const postData = {contents:[{parts:[{text:        eventBody.question      }]}]};
-        const response =  await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=' + GOOGLE_API_KEY, {method: 'POST',headers: {'Content-Type': 'application/json'},body: JSON.stringify(postData)})
-        const data = await response.json()
-
-        // console.log("got the response")
-        // console.log(data.candidates[0].content.parts[0].text)
-        // setOutput(data.candidates[0].content.parts[0].text)
-
+        // For text-only input, use the gemini-pro model
+        const model = genAI.getGenerativeModel({ model: "gemini-pro"});
+        const chat = model.startChat(
+            {
+                history: 
+                    [
+                      {
+                        role: "user",
+                        parts: [{ text: "Hello, I have 2 dogs in my house." }],
+                      },
+                      {
+                        role: "model",
+                        parts: [{ text: "Great to meet you. What would you like to know?" }],
+                      },
+                    ],
+                generationConfig: 
+                {
+                  maxOutputTokens: 100,
+                },
+        });
+        
+        const msg = eventBody.question;
+        const result = await chat.sendMessage(msg);
+        const response = await result.response;
+        const text = response.text();
+        console.log("got chat response")
+        console.log(text);
+        
         return{
             statusCode:200,
-            body: JSON.stringify(  data.candidates[0].content.parts[0].text )
+            body: JSON.stringify( text )
         }
 
     }
