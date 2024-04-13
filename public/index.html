@@ -4,7 +4,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script src="https://cdn.jsdelivr.net/npm/showdown@<version>/dist/showdown.min.js"></script>
+
+<script type="module"  src="firebase.js"></script>
+<!-- <script src=" https://requirejs.org/docs/release/2.3.5/minified/require.js"></script> -->
+<script src = "https://cdn.jsdelivr.net/npm/showdown@<version>/dist/showdown.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
 
@@ -94,6 +97,7 @@
     <div class="input-area">
         <input type="text" id="userInput" placeholder="Type your message...">
         <input type="button" value="Send" onclick="get_gemini_response()">
+        <input type="button" value="Send" onclick= "save_in_firebase('wefw')">
     </div> 
 </footer>
 
@@ -139,6 +143,23 @@
         displayMessage("bot",marked.parse("<p>\n\n</p>"));
         document.getElementById('userInput').value = '';
 
+    }
+
+    async function save_in_firebase()
+    {
+        var userInput = document.getElementById('userInput').value;
+        const response = await fetch( "/.netlify/functions/save_firebase"
+        ,{
+            method:'POST',
+            body:JSON.stringify({
+                data:userInput.trim()
+            })
+        }
+        ).then(console.log("done"))
+
+        // console.log("got the response")
+        // console.log(response)
+        // setOutput(response)
     }
 
 
