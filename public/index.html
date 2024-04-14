@@ -5,15 +5,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<script type="module"  src="firebase.js"></script>
-<!-- <script src=" https://requirejs.org/docs/release/2.3.5/minified/require.js"></script> -->
 <script src = "https://cdn.jsdelivr.net/npm/showdown@<version>/dist/showdown.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
-
 <title>ChatGPT Web Page</title>
-<style>
 
+<style>
     body {
         margin: 0;
         padding: 0;
@@ -56,110 +52,202 @@
         flex-direction: row;
     }
     .input-area input[type="text"] {
-        padding: 12px;
+        padding: 14px;
         border: none;
         border-radius: 5px;
         outline: none;
         font-size: medium;
         flex-grow: 1;
     }
-    .input-area input[type="button"] {
-        background-color: #007bff;
-        color: #fff;
-        border: none;
-        border-radius: 5px;
-        padding: 8px 25px;
-        cursor: pointer;
-        margin-left: 10px;
-    }
+
     .footer {
         background-color: #333;
         color: #fff;
         text-align: center;
         position: fixed;
         bottom: 0;
-        padding-bottom: 15px;
+        padding-bottom: 10px;
         width: 100%;
     }
+
+    #data-format{
+        width: 70vw;
+        font-size:large;
+        color:black;
+        background-color: #f3f3f3;
+        color: black;
+        border-radius: 10px;
+        margin: 15px;
+        padding: 1px 25px;
+    }
+    #que-text{
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+    .savebtndiv{
+        text-align: end;
+        margin-bottom: 10px;
+    }
+
+    #loadingButton {
+        position: relative;
+        background-color: #007bff;
+        color: #f8f8f8;
+        border: none;
+        border-radius: 5px;
+        padding: 8px 25px;
+        cursor: pointer;
+        margin-left: 10px;
+    }
+
+    #loadingButton.loading:after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 20px;
+        height: 20px;
+        border: 3px solid #fff;
+        border-radius: 50%;
+        border-top-color: #000;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: translate(-50%, -50%) rotate(0deg); }
+        100% { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
+
 
 </style>
 </head>
 <body>
 
     <div class="content">
-        <div class="header"></div>
+        <!-- <div class="header"></div> -->
         <div class="chat-area" id="chatArea"></div>
     </div>
-
-
 
 <footer class="footer">
     <div class="input-area">
         <input type="text" id="userInput" placeholder="Type your message...">
-        <input type="button" value="Send" onclick="get_gemini_response()">
-        <input type="button" value="Send" onclick= "save_in_firebase('wefw')">
-    </div> 
+        <button value="Send" id="loadingButton" onclick="get_gemini_response()">Send</button>
+    </div>
 </footer>
-
 
 
 <script>
 
-    function displayMessage(sender, message) {
-        var chatArea = document.getElementById('chatArea');
-        var messageDiv = document.createElement('div');
-        messageDiv.classList.add('message');
-        if (sender === 'user') {
-            messageDiv.classList.add('user-message');
-        } else if (sender === 'bot') {
-            messageDiv.classList.add('bot-message');
-        }
-        messageDiv.innerHTML = message;
+    let history = []
+
+    function displayMessage(que, ans)
+    {
+        var chatArea = document.getElementById('chatArea')
+        messageDiv = generateHTML(que,marked.parse(ans))
         chatArea.appendChild(messageDiv);
         chatArea.scrollTop = chatArea.scrollHeight;
+        saveButton = messageDiv.querySelector("#savebtn")
+        saveButton.addEventListener("click", (event) => {
+            if(saveButton.innerHTML!="Saved"){
+                console.log("saving in firebase"+que+ans)
+                save_in_firebase(que,ans)
+                saveButton.innerHTML = "Saved"
+            }
+        })
+        stopLoading()
+    }
+
+    function generateHTML(que , ans)
+    {
+        var container = document.createElement('div');
+        container.innerHTML = '<div id="data-format"><div id="que-text"></div><div id="ans-text"></div><div class="savebtndiv"><button id="savebtn">Save</button></div></div>'
+        var queDiv = container.querySelector('#que-text');
+        var ansDiv = container.querySelector('#ans-text');
+        queDiv.innerHTML = '<p>'+que+'</p>'
+        ansDiv.innerHTML = ans
+        return container;
     }
 
     async function get_gemini_response()
     {
         var userInput = document.getElementById('userInput').value;
-        displayMessage('user', userInput);
-        const response = await fetch( "/.netlify/functions/gemini2"
+        if(userInput.trim()=="" ){
+            console.log("null input")
+            return
+        }
+        startLoading()
+        try{
+            const response = await fetch( "/.netlify/functions/gemini2"
+            ,{
+                method:'POST',
+                body:JSON.stringify({
+                question:userInput.trim()
+                })
+            }
+            ).then(response => response.json())
+            console.log("got the response")
+            console.log(response)
+            displayMessage(userInput,response)
+            document.getElementById('userInput').value = '';
+        }
+        catch(error){
+            console.log(erro)
+        }
+    }
+
+    async function get_gemini_chat_response()
+    {
+        var userInput = document.getElementById('userInput').value;
+        const response = await fetch( "/.netlify/functions/gemini_chat"
+        ,{
+            method:'POST',
+            history:history,
+            body:JSON.stringify({
+            question:userInput.trim()
+            })
+        }
+        ).then(response => response.json() )
+        console.log("got the response")
+        console.log(response)
+        displayMessage(userInput,response)
+        document.getElementById('userInput').value = '';
+        history.push({role:"user" , parts:userInput.trim()} , { role:"model" , parts:response })
+        console.log(history)
+    }
+
+    async function save_in_firebase(que, ans)
+    {
+        var userInput = document.getElementById('userInput').value;
+        const response = await fetch( "/.netlify/functions/firebase_savedata"
         ,{
             method:'POST',
             body:JSON.stringify({
-            question:userInput.trim()
+            question:que,
+            answer:ans
             })
         }
         ).then(response => response.json())
 
         console.log("got the response")
         console.log(response)
-        setOutput(response)
     }
 
-    function setOutput(response){
-
-        displayMessage("bot",marked.parse(response));
-        displayMessage("bot",marked.parse("<p>\n\n</p>"));
-        document.getElementById('userInput').value = '';
-
+    function startLoading() {
+        var button = document.getElementById('loadingButton');
+        button.classList.add('loading');
+        const w = button.offsetWidth;
+        button.innerHTML = ""
+        console.log(w)
+        button.style.width = w+"px"
+        button.setAttribute('disabled', 'disabled');
     }
 
-    async function save_in_firebase()
-    {
-        var userInput = document.getElementById('userInput').value;
-        const response = await fetch( "/.netlify/functions/save_firebase"
-        ,{
-            method:'POST',
-            body:JSON.stringify({
-                data:userInput.trim()
-            })
-        }
-        ).then(console.log("done"))
-
-        // console.log("got the response")
-        // console.log(response)
-        // setOutput(response)
+    function stopLoading() {
+        var button = document.getElementById('loadingButton');
+        button.innerHTML = "Send"
+        button.classList.remove('loading');
+        button.removeAttribute('disabled');
     }
 
 
@@ -168,134 +256,3 @@
 </body>
 
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<!-- <!DOCTYPE html>
-<html lang="en">
-
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Jamstack Explorers - Up and Running with Serverless Functions</title>
-  </head>
-
-  <body>
-
-    <div class="container">
-      <h1>ChatGPT Web App</h1>
-      <div>
-          <textarea id="user-input" rows="4" placeholder="Type your message here..."></textarea>
-          <button onclick="get_gemini_response()">Send</button>
-      </div>
-      <div id="chat-box"></div>
-    </div>
-
-
-
-
-
-
-    <script>
-
-
-    async function sendMessage()
-    {
-        const userInput = document.getElementById('user-input').value.trim();
-        const GOOGLE_API_KEY = 'AIzaSyDMDjSzsuRKGk3q0XrtiSpr03ZlJGou1Yo'; // Replace with your actual API key
-
-        const postData = {
-            contents: [
-                {
-                    parts: [
-                        { text: userInput }
-                    ]
-                }
-            ]
-        };
-
-        fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=' + GOOGLE_API_KEY, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(postData)
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-          const text = data.candidates[0].content.parts[0].text
-          appendMessage(text)
-        })
-        .catch(error => {
-            console.error('There was a problem with your fetch operation:', error);
-        });
-
-
-
-
-
-    }
-
-    async function get_gemini_response()
-    {
-      const response = await fetch( "/.netlify/functions/gemini2"
-      ,{
-        method:'POST',
-        body:JSON.stringify({
-          question:document.getElementById('user-input').value.trim()
-        })
-      } 
-    ).then(response => response.json())
-
-    console.log(typeof response)
-    appendMessage(response)
-
-    }
-
-function appendMessage(message) {
-    const chatBox = document.getElementById('chat-box');
-    const messageElement = document.createElement('div');
-    messageElement.textContent = message;
-    chatBox.appendChild(messageElement);
-    chatBox.scrollTop = chatBox.scrollHeight; // scroll to bottom
-}
-
-
-    </script>
-  </body>
-
-
-</html> -->
-
-
-
