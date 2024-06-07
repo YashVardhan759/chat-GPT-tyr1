@@ -19,9 +19,6 @@ exports.handler = async function(event ,context) {
         const chat = model.startChat(
             {   
                 history:JSON.parse(eventBody.history)['history'],
-                generationConfig: {
-                    maxOutputTokens: 100,
-                },
         });
 
   
