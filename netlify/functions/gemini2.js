@@ -6,7 +6,7 @@ exports.handler = async function(event ,context) {
 
     const eventBody = JSON.parse(event.body)
     console.log(eventBody.question)
-
+    console.log("hello i am working")
     try{
 
 

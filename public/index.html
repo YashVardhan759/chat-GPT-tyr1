@@ -132,14 +132,14 @@
 <footer class="footer">
     <div class="input-area">
         <input type="text" id="userInput" placeholder="Type your message...">
-        <button value="Send" id="loadingButton" onclick="get_gemini_response()">Send</button>
+        <button value="Send" id="loadingButton" onclick="get_gemini_chat_response()">Send</button>
     </div>
 </footer>
 
 
 <script>
 
-    let history = []
+
 
     function displayMessage(que, ans)
     {
@@ -196,25 +196,42 @@
         }
     }
 
+    function addHistory(role , text){
+        let parsed2 = JSON.parse(   `  { "role":"${role}" , "parts": [{ "text": "${text}"} ] }  `  ) 
+        chatHistory["history"].push(parsed2)      
+    }
+
+    let chatHistory =  JSON.parse( '{ "history":[]  }')
+    addHistory("user" , "hi i am yash")
+    addHistory("model" , "hi")
     async function get_gemini_chat_response()
     {
         var userInput = document.getElementById('userInput').value;
-        const response = await fetch( "/.netlify/functions/gemini_chat"
-        ,{
-            method:'POST',
-            history:history,
-            body:JSON.stringify({
-            question:userInput.trim()
-            })
+        if(userInput.trim()=="" ){
+            console.log("null input")
+            return
         }
-        ).then(response => response.json() )
-        console.log("got the response")
-        console.log(response)
-        displayMessage(userInput,response)
-        document.getElementById('userInput').value = '';
-        history.push({role:"user" , parts:userInput.trim()} , { role:"model" , parts:response })
-        console.log(history)
+        startLoading()
+        
+            const response = await fetch( "/.netlify/functions/gemini_chat"
+            ,{
+                method:'POST',
+                body:JSON.stringify({
+                    question:userInput.trim(),
+                    history:JSON.stringify(chatHistory)
+                })
+            }
+            ).then(response => response.json() )
+            console.log("Ui got the response")
+            console.log(typeof response)
+            displayMessage(userInput,response)
+            document.getElementById('userInput').value = '';
+            addHistory("user" , userInput.trim())
+            addHistory("model" , response)
+            console.log(chatHistory)
+
     }
+
 
     async function save_in_firebase(que, ans)
     {
