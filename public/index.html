@@ -16,7 +16,7 @@
         height: 100%;
         display: flex;
         flex-direction: column;
-        color: white;
+        background: #333;
     }
     .content {
         background-color: #333;
@@ -118,9 +118,17 @@
         100% { transform: translate(-50%, -50%) rotate(360deg); }
     }
 
+    #change_model{
+        width: 100px;
+        margin-left: calc(100% - 110px);
+        margin-top: 10px;
+    }
+
+
 
 
 </style>
+<button id="change_model" onclick="change_mode()" > Dont use chat </button>
 </head>
 <body>
 
@@ -131,15 +139,38 @@
 
 <footer class="footer">
     <div class="input-area">
-        <input type="text" id="userInput" placeholder="Type your message...">
-        <button value="Send" id="loadingButton" onclick="get_gemini_chat_response()">Send</button>
+        <input type="text" id="userInput" placeholder="Type your message ...">
+        <button value="Send" id="loadingButton" onclick="call()">Send</button>
     </div>
 </footer>
 
 
 <script>
 
+    var run_chat = 1;
 
+    function change_mode(){
+        var button = document.getElementById('change_model');
+        if (run_chat==0)
+        {
+            run_chat=1
+            button.innerHTML = "Dont use chat"
+        }
+        else{
+            run_chat=0
+            button.innerHTML = "Use chat"
+        }
+    }
+
+    async function call(){
+        if(run_chat==1)
+        {
+            get_gemini_chat_response()
+        }
+        else{
+            get_gemini_response()
+        }
+    }
 
     function displayMessage(que, ans)
     {
@@ -197,13 +228,18 @@
     }
 
     function addHistory(role , text){
-        let parsed2 = JSON.parse(   `  { "role":"${role}" , "parts": [{ "text": "${text}"} ] }  `  ) 
-        chatHistory["history"].push(parsed2)      
+        // let parsed2 = JSON.parse(   `  { "role":"${role}" , "parts": [{ "text": "${text}"} ] }  `  ) 
+        // chatHistory["history"].push(parsed2)   
+        // chatHistory+=  `,{ "role":"${role}" , "parts": [{ "text": "${text}"} ] }`  
+        if (role=="user"){
+            user.push(text)
+        }else{
+            model.push(text)
+        }  
     }
 
-    let chatHistory =  JSON.parse( '{ "history":[]  }')
-    addHistory("user" , "hi i am yash")
-    addHistory("model" , "hi")
+    let user = []
+    let model = []
     async function get_gemini_chat_response()
     {
         var userInput = document.getElementById('userInput').value;
@@ -212,23 +248,38 @@
             return
         }
         startLoading()
-        
-            const response = await fetch( "/.netlify/functions/gemini_chat"
-            ,{
-                method:'POST',
-                body:JSON.stringify({
-                    question:userInput.trim(),
-                    history:JSON.stringify(chatHistory)
-                })
-            }
-            ).then(response => response.json() )
-            console.log("Ui got the response")
-            console.log(typeof response)
-            displayMessage(userInput,response)
-            document.getElementById('userInput').value = '';
-            addHistory("user" , userInput.trim())
-            addHistory("model" , response)
-            console.log(chatHistory)
+        let userstr = '{ \"text\" :"i m yash"}';
+        let modelstr = '{ \"text\" :"nice"}';
+
+        user.forEach(element => {
+            userstr = userstr+","+'{ \"text\":"'+element+'"}'
+        });
+        model.forEach(element => {
+            modelstr = modelstr+","+'{ \"text\" :"'+element+'"}'
+        });
+
+        console.log(JSON.stringify({
+                question:userInput.trim(),
+                history: `{ "history" : [ { "role":"user" , "parts": [${userstr}] } , { "role":"model" , "parts":[${modelstr}] }]  }`
+                // history : "i am the history here " 
+            }))
+
+        const response = await fetch( "/.netlify/functions/gemini_chat"
+        ,{
+            method:'POST',
+            body:JSON.stringify({
+                question:userInput.trim(),
+                history: `{ "history" : [ { "role":"user" , "parts": [${userstr}] } , { "role":"model" , "parts":[${modelstr}] }]  }`
+                // history : "i am the history here " 
+            })
+        }
+        ).then(response => response.json() )
+        console.log("Ui got the response")
+        displayMessage(userInput,response)
+        document.getElementById('userInput').value = '';
+        addHistory("user" , userInput.trim())
+        addHistory("model" , response)
+        // console.log(chatHistory)
 
     }
 
