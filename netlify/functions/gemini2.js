@@ -11,8 +11,8 @@ exports.handler = async function(event ,context) {
 
 
         console.log("Got the request fine")
-
-        const GOOGLE_API_KEY = 'AIzaSyDMDjSzsuRKGk3q0XrtiSpr03ZlJGou1Yo'; // Replace with your actual API key
+// 'AIzaSyDMDjSzsuRKGk3q0XrtiSpr03ZlJGou1Yo'
+        const GOOGLE_API_KEY = 'AIzaSyC-Ao1l7gTFGhiyw7eZa6QVB30U16YFtDA' ; // Replace with your actual API key
         const postData = {contents:[{parts:[{text:        eventBody.question      }]}]};
         const response =  await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=' + GOOGLE_API_KEY, {method: 'POST',headers: {'Content-Type': 'application/json'},body: JSON.stringify(postData)})
         const data = await response.json()
